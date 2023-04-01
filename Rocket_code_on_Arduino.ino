@@ -81,6 +81,7 @@ Servo Y;
 #define INTERRUPT_PIN 2  // use pin 2 on Arduino Uno & most boards
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
+int beep = 0;
 
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
@@ -162,11 +163,25 @@ void setup() {
     Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 
     // wait for ready
-    Serial.println(F("\nSend any character to start DMP and flight: "));
-    while (Serial.available() && Serial.read()); // empty buffer
-    while (!Serial.available());                 // wait for data
-    while (Serial.available() && Serial.read()); // empty buffer again
-    
+    Serial.println(F("\nSending a request to start DMP and flight..."));
+    //while (Serial.available() && Serial.read()); // empty buffer
+    //while (!Serial.available());                 // wait for data
+    //while (Serial.available() && Serial.read()); // empty buffer again 
+    delay(1000);   
+    digitalWrite(Buzz,1);
+    delay(100);
+    digitalWrite(Buzz,0);
+    delay(900);
+    digitalWrite(Buzz,1);
+    digitalWrite(led,1);
+    delay(100);
+    digitalWrite(Buzz,0);
+    digitalWrite(led,0);
+    delay(900);
+    digitalWrite(Buzz,1);
+    delay(100);
+    digitalWrite(Buzz,0);
+    delay(900);
 
     // load and configure the DMP
     Serial.println(F("Initializing DMP..."));
@@ -200,10 +215,11 @@ void setup() {
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
         Serial.println(F("DMP ready! Waiting for first interrupt..."));
         dmpReady = true;
+        Serial.println(F("Go Antares! Go Gyro!"));
         digitalWrite(Buzz, 1);
         delay(100);
         digitalWrite(Buzz, 0);
-        delay(100); 
+        delay(1000);
         digitalWrite(Buzz, 1);
         delay(100);
         digitalWrite(Buzz, 0);
@@ -219,6 +235,7 @@ void setup() {
         // 2 = DMP configuration updates failed
         // (if it's going to break, usually the code will be 1)
         Serial.print(F("DMP Initialization failed (code "));
+        Serial.print(F("STOP!"));
         Serial.print(devStatus);
         Serial.println(F(")"));
     }
@@ -273,13 +290,13 @@ void loop() {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
             Serial.print("ypr\t");
-            Serial.print(ypr[0] * 180/M_PI);
-            X.write(ypr[0] * 180/M_PI);
+            Serial.print(ypr[0] * 180/M_PI+90);
+            X.write(ypr[0] * 180/M_PI+90);
             Serial.print("\t");
             Serial.print(ypr[1] * 180/M_PI);
             Serial.print("\t");
-            Serial.println(ypr[2] * 180/M_PI);
-            Y.write(ypr[2] * 180/M_PI);
+            Serial.println(ypr[2] * 180/M_PI+90);
+            Y.write(ypr[2] * 180/M_PI+90);
         #endif
 
         #ifdef OUTPUT_READABLE_REALACCEL
@@ -330,9 +347,9 @@ void loop() {
         blinkState = !blinkState;
         digitalWrite(LED_PIN, blinkState);
     }
-    if (round(millis() / 1000) % 2 == 0) {     // Just beeping
-      digitalWrite(Buzz, 1);
-    } else {
-      digitalWrite(Buzz, 0);
-    }
+    // if (round(millis() / 100) % 2 == 0) {      // just beeping
+    //   digitalWrite(Buzz, 1);
+    // } else {
+    //   digitalWrite(Buzz, 0);
+    // }
 }
